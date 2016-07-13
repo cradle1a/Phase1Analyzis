@@ -1,0 +1,60 @@
+{
+//========= Macro generated from object: pulse eta4 depth17 led=0/pulse eta4 depth17 led=0
+//========= by ROOT version6.06/05
+   
+   TH1F *pulsesPeta4sPdepth17sPledeQ0__2 = new TH1F("pulsesPeta4sPdepth17sPledeQ0__2","pulse eta4 depth17 led=0",100000,0,1.5e+06);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(4,1790);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(5,603);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(6,47);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(7,146);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(8,516);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(9,17);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(10,28);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(11,141);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(12,14);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(13,7);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(14,20);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(15,11);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(16,2);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(17,6);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(18,12);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(21,4);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(23,1);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(24,1);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetBinContent(25,1);
+   pulsesPeta4sPdepth17sPledeQ0__2->SetEntries(3367);
+   
+   ptstats = new TPaveStats(0.78,0.775,0.98,0.935,"brNDC");
+   ptstats->SetName("stats");
+   ptstats->SetBorderSize(1);
+   ptstats->SetFillColor(0);
+   ptstats->SetTextAlign(12);
+   ptstats->SetTextFont(42);
+   AText = ptstats->AddText("pulse eta4 depth17 led=0");
+   AText->SetTextSize(0.0368);
+   AText = ptstats->AddText("Entries = 3367   ");
+   AText = ptstats->AddText("Mean  =  76.09");
+   AText = ptstats->AddText("Std Dev   =  36.88");
+   ptstats->SetOptStat(1111);
+   ptstats->SetOptFit(0);
+   ptstats->Draw();
+   pulsesPeta4sPdepth17sPledeQ0__2->GetListOfFunctions()->Add(ptstats);
+   ptstats->SetParent(pulsesPeta4sPdepth17sPledeQ0__2);
+
+   ci = TColor::GetColor("#000099");
+   pulsesPeta4sPdepth17sPledeQ0__2->SetLineColor(ci);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetXaxis()->SetRange(1,23);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetXaxis()->SetLabelFont(42);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetXaxis()->SetLabelSize(0.035);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetXaxis()->SetTitleSize(0.035);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetXaxis()->SetTitleFont(42);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetYaxis()->SetLabelFont(42);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetYaxis()->SetLabelSize(0.035);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetYaxis()->SetTitleSize(0.035);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetYaxis()->SetTitleFont(42);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetZaxis()->SetLabelFont(42);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetZaxis()->SetLabelSize(0.035);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetZaxis()->SetTitleSize(0.035);
+   pulsesPeta4sPdepth17sPledeQ0__2->GetZaxis()->SetTitleFont(42);
+   pulsesPeta4sPdepth17sPledeQ0__2->Draw("");
+}

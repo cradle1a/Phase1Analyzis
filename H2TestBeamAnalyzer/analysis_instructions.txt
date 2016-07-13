@@ -1,0 +1,26 @@
+To run on cmshcaltb05 (recommended):
+
+1. cd /home/daq/Analysis/HcalTestBeam/CMSSW_7_5_0/src/UserCode/H2TestBeamAnalyzer
+2. cmsenv
+3. ./run_analysis.py [options]
+
+Usage: run_analysis.py [options]
+
+Options:
+  -h, --help          show this help message and exit
+  --r=RUNS            Pick a specific run number or range of numbers with Unix
+                      globbing - may need to use single quotes or -f before
+                      running. NOTE - MUST USE 6 DIGIT RUN NUMBER, add leading
+                      zeros as needed.
+  -d                  Delete files after moving to destination
+  --dest=DESTINATION  Destination directory for run results/html. Remote
+                      locations ok
+  --runDest=RUNDEST   Where the run files HTB*.root are to be stored during
+                      processing. '.' for working directory, but will be
+                      removed if '.' is used
+  -v                  Runs the analysis in verbose mode. Not recommended on
+                      large runs or batches of runs, as verbose output can be
+                      quite massive.
+  -q                  Further decreases verbosity.
+  --all               Use --all to run on all files in spool
+

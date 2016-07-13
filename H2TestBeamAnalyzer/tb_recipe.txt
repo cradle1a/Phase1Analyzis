@@ -1,0 +1,26 @@
+ssh lxplus.cern.ch
+scp -r daq@cmshcal09.cern.ch:/data/spool/HTB_007591.root ~/.
+cd /afs/cern.ch/user/j/jhirsch/CMSSW_6_0_1/src
+cmsenv  
+cd /afs/cern.ch/user/j/jhirsch/CMSSW_6_0_1/src/UserCode/H2TestBeamAnalyzer   
+cmsRun h2testbeamanalyzer_cfg.py 007591
+# On laptop:
+scp lxplus.cern.ch:/afs/cern.ch/user/j/jhirsch/CMSSW_6_0_1/src/UserCode/H2TestBeamAnalyzer/ana_h2_tb_run007591.root .
+
+# Add dummy value to "edges" dictionary in tb_utils.py and then process file:
+./tb_ana.py --i ana_h2_tb_run007591.root --o ana_tb_out_run7591.root --r 7591 
+
+# Run tb_plots.py like this to get updated "edges" values for run
+./tb_plots.py --i ana_tb_out_run7591.root --o tb_plots_run7591 --r 7591 --pe_only 
+
+# Add new values to "edges" dictionary in tb_utils.py and then re-process file:
+./tb_ana.py --i ana_h2_tb_run007591.root --o ana_tb_out_run7591.root --r 7591 
+
+# Make plots
+./tb_plots.py --i ana_tb_out_run7591.root --o tb_plots_run7591 --r 7591 
+./makeHtml.py tb_plots_run7591
+
+# Open index.html with browser on laptop (or copy to CERN/FNAL webpage).   On my mac the URL is:
+file:///Users/jhirsch/tb_plots_run7591/index.html
+
+

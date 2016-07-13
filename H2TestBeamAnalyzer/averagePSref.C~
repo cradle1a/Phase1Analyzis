@@ -1,0 +1,346 @@
+#include "Riostream.h"
+#include <string>
+#include <stdlib.h>
+#include <iostream> 
+#include <cstdio>
+#include <cstdlib>
+const int Numberofchannels=48;
+
+TCanvas *c[102];
+int fiber,fiberch;
+char label[50],name[70];
+TFile *fileinput;
+TH1F *hsinglePS[10][100][10][2];
+TH1F *TSmax[10][100][2];
+TH1F *hpulse[10][100][2];
+TH1F *hpulseref[10][100];
+float pulse[Numberofchannels][10];
+int TSn,fibermin=100,fibermax=0;
+//int ieta;
+//int depth;
+//int channel[10][6];
+TH1F *avgPS[10][100][2];
+//string listn ;
+int ch2eta[Numberofchannels];
+int ch2depth[Numberofchannels];
+TH2F *spectr[2],*meansignalmap[2],*rmssignalmap[2];
+TH2F *reflectionmap,*reflectionentriesmap;
+int number_TS_to_process=2;
+int maxts(float TSvalue[10],int number_TS_to_process);
+void averagePSref(int runnumber,int uhtr,int refcheta=2,int refchdepth=5){
+  // getting map from file
+ ///
+ ///
+ FILE * in;
+ char label1[50];
+ sprintf(name,"tb_chanmap.py");
+ in = fopen (name, "rt");
+ rewind(in);
+ fgets(label1,50,in);
+ fgets(label1,50,in);
+ // printf("%s\n",label1);
+ int etaN,depthN,channelN,led_trigger;
+ for(int channel=0;channel<Numberofchannels;channel++){
+   
+     fgets(label1,50,in);
+     //printf("%s\n",label1);
+     //  printf("%s\n",listn);
+     sscanf(label1,"chanmap[%d,8,%d] = %d",&etaN,&depthN,&channelN);
+     // channel[etaN][depthN]=channelN;
+     //  printf("channel[%d][%d]=%d\n",etaN,depthN,channelN);
+     ch2eta[channelN-1]=etaN;
+     ch2depth[channelN-1]=depthN;
+     
+   
+ }
+ fclose(in);
+ //getting fibermin fibermax
+for(int channel=0;channel<Numberofchannels;channel++){
+  if (ch2depth[channel]>fibermax) fibermax = ch2depth[channel];
+  if (ch2depth[channel]<fibermin) fibermin = ch2depth[channel];
+ }
+ printf("fiber %d - %d\n",fibermin,fibermax);
+ ///create histos
+ for(int ietan=0;ietan<10;ietan++){
+   for(int depthn=fibermin;depthn<fibermax+1;depthn++){
+     for(int led=0;led<2;led++){
+       for(int TSnn=0;TSnn<10;TSnn++){
+	 
+	 sprintf(label,"charge eta%d depth%d TS%d led=%d",ietan,depthn,TSnn,led);
+	 if(gROOT->FindObject(label))  hsinglePS[ietan][depthn][TSnn][led]=(TH1F*)gROOT->FindObject(label);
+	 else	 hsinglePS[ietan][depthn][TSnn][led]= new TH1F(label,label,100000,0,1000000);
+	 hsinglePS[ietan][depthn][TSnn][led]->Reset();
+	
+       }
+      
+
+       sprintf(label,"avgPS eta%d depth%d led=%d",ietan,depthn,led);
+     if(gROOT->FindObject(label))  avgPS[ietan][depthn][led] = (TH1F*)gROOT->FindObject(label);
+     else   avgPS[ietan][depthn][led]= new TH1F(label,label,10,0,10);
+     avgPS[ietan][depthn][led]->Reset();
+
+     sprintf(label,"TSmax eta%d depth%d led=%d",ietan,depthn,led);
+     if(gROOT->FindObject(label))  TSmax[ietan][depthn][led] = (TH1F*)gROOT->FindObject(label);
+     else   TSmax[ietan][depthn][led]= new TH1F(label,label,10,0,10);
+     TSmax[ietan][depthn][led]->Reset();
+
+     sprintf(label,"pulse eta%d depth%d led=%d",ietan,depthn,led);
+     if(gROOT->FindObject(label)) hpulse[ietan][depthn][led] = (TH1F*)gROOT->FindObject(label);
+     else   hpulse[ietan][depthn][led]=new TH1F(label,label,15000,0,15000);
+     hpulse[ietan][depthn][led]->Reset();
+
+     }
+   
+     sprintf(label,"refpulse eta%d depth%d(rech%d %d)",ietan,depthn,refcheta,refchdepth);
+     if(gROOT->FindObject(label)) hpulseref[ietan][depthn] = (TH1F*)gROOT->FindObject(label);
+     else   hpulseref[ietan][depthn]=new TH1F(label,label,100000,0,1500000);
+     hpulseref[ietan][depthn]->Reset();
+   }
+ }
+ for (int led=0;led<2;led++){
+   sprintf(label,"spectraVS fiber led=%d",led);
+   if(gROOT->FindObject(label))  spectr[led] =  (TH2F*)gROOT->FindObject(label);
+   else  spectr[led] = new TH2F(label,label,10*(fibermax-fibermin+1),fibermin*10,(fibermax+1)*10,10000,0,1500000);
+   spectr[led]->Reset();
+
+   sprintf(label,"mean led=%d",led);
+   if(gROOT->FindObject(label)) meansignalmap[led] =  (TH2F*)gROOT->FindObject(label);
+   else   meansignalmap[led] = new TH2F(label,label,fibermax-fibermin+1,fibermin,fibermax+1,6,0,6);
+   meansignalmap[led]->Reset();
+
+   sprintf(label,"rms led=%d",led);
+   if(gROOT->FindObject(label)) rmssignalmap[led] = (TH2F*)gROOT->FindObject(label);
+   else  rmssignalmap[led] = new TH2F(label,label,fibermax-fibermin+1,fibermin,fibermax+1,6,0,6);
+   rmssignalmap[led]->Reset();
+
+ }
+   sprintf(label,"reflection");
+   if(gROOT->FindObject(label)) reflectionmap = (TH2F*)gROOT->FindObject(label);
+   else  reflectionmap = new TH2F(label,label,fibermax-fibermin+1,fibermin,fibermax+1,6,0,6);
+   reflectionmap->Reset();
+
+sprintf(label,"reflectionentriesmap");
+   if(gROOT->FindObject(label)) reflectionentriesmap = (TH2F*)gROOT->FindObject(label);
+   else  reflectionentriesmap = new TH2F(label,label,fibermax-fibermin+1,fibermin,fibermax+1,6,0,6);
+   reflectionentriesmap->Reset();
+ sprintf(name,"ana_h2_tb_run%.6d_EMAP-kalinin_HTR%d.root",runnumber,uhtr);
+ fileinput = TFile::Open(name);
+ 
+ 
+
+ //read TTree
+ 
+ TTree *Events = (TTree*)fileinput->Get("QIE11Data/Events");
+ Events->SetBranchAddress("pulse",&pulse);
+ // Events->SetBranchAddress("TSn",&TSn);
+ // Events->SetBranchAddress("ieta",&ieta);
+ //Events->SetBranchAddress("depth",&depth);
+ Events->SetBranchAddress("led_trigger",&led_trigger);
+ int sumTS,sumall;
+ 
+ //sprintf(cut_criteria,"ieta==%d && depth==%d",2,0);
+ Int_t nentries = (Int_t)Events->GetEntries();
+ printf("total number of events in tree = %d\n",nentries);
+
+
+
+ for (Int_t i=0; i<nentries; i++) {
+   if(i%(100+(900*(i>999)))==0)  printf("processing %d event\n",i);
+   Events->GetEntry(i);
+ 
+    
+   for (channelN=0;channelN<Numberofchannels;channelN++){
+     sumTS=0;
+     sumall=0;
+
+     int maxtsn=maxts(pulse[channelN],number_TS_to_process);
+     TSmax[ch2eta[channelN]][ch2depth[channelN]][led_trigger]->Fill(maxtsn);
+
+     for(int TS=0;TS<10;TS++){
+       
+       // if (led_trigger==1){
+       // if (led_trigger==1 ) hsinglePS[ch2eta[channelN]][ch2depth[channelN]][TS][led_trigger]->Fill(pulse[channelN][TS]);
+       //       if ((led_trigger==0)&&(pulse[channelN][TS]<50)) 
+       hsinglePS[ch2eta[channelN]][ch2depth[channelN]][TS][led_trigger]->Fill(pulse[channelN][TS]);
+       if((TS>=maxtsn)&&(TS<maxtsn+number_TS_to_process)) sumTS+=pulse[channelN][TS];
+	 sumall+=pulse[channelN][TS];
+	 // }
+     }
+      if (led_trigger==0) {
+       spectr[led_trigger]->Fill(ch2depth[channelN]*10+ch2eta[channelN],sumTS);
+       hpulse[ch2eta[channelN]][ch2depth[channelN]][led_trigger]->Fill(sumTS);
+       }
+      if (led_trigger==1) {
+	spectr[led_trigger]->Fill(ch2depth[channelN]*10+ch2eta[channelN],sumTS);
+       hpulse[ch2eta[channelN]][ch2depth[channelN]][led_trigger]->Fill(sumTS);
+       }
+
+   }
+   }
+
+ 
+ 
+ //Filling Pulse shape histo
+  for(int ietan=0;ietan<6;ietan++){
+    for(int depthn=fibermin;depthn<fibermax+1;depthn++){
+      for (int led=0;led<2;led++){
+	for(int TSnn=0;TSnn<10;TSnn++){
+	  avgPS[ietan][depthn][led]->Fill(TSnn,hsinglePS[ietan][depthn][TSnn][led]->GetMean());
+	  avgPS[ietan][depthn][led]->SetBinError(TSnn+1,hsinglePS[ietan][depthn][TSnn][led]->GetRMS());
+	}
+	meansignalmap[led]->SetBinContent(depthn-fibermin+1,ietan+1,hpulse[ietan][depthn][led]->GetMean());
+	rmssignalmap[led]->SetBinContent(depthn-fibermin+1,ietan+1,hpulse[ietan][depthn][led]->GetRMS());
+      }
+    }
+  }
+
+//second scan reference
+  if (refchdepth+refcheta!=0){
+   for (Int_t i=0; i<nentries; i++) {
+     if(i%(100+(900*(i>999)))==0)  printf("processing %d event\n",i);
+     Events->GetEntry(i);if (!led_trigger) continue;
+     //getting refchvalues
+     float refchpulse=0;
+     for (channelN=0;channelN<Numberofchannels;channelN++){
+       //  printf("channelN %d ch2depth %d ch2eta %d\n",channelN,ch2depth[channelN],ch2eta[channelN]);
+       if ((ch2depth[channelN]==refchdepth)&&(ch2eta[channelN]==refcheta)){
+	 // printf("channelref %d\n",channelN);
+	 int maxtsn=maxts(pulse[channelN],number_TS_to_process);
+	 for(int TS=0;TS<10;TS++){
+	 if((TS>=maxtsn)&&(TS<maxtsn+number_TS_to_process)) refchpulse+=pulse[channelN][TS];  
+	 }
+       }
+     }
+       printf("refchpulse %f\n",refchpulse);
+       refchpulse-=meansignalmap[0]->GetBinContent(refchdepth-fibermin+1,refcheta+1);
+     //end getting refchvalues
+     for (channelN=0;channelN<Numberofchannels;channelN++){
+       sumTS=0;
+       sumall=0;
+       
+       int maxtsn=maxts(pulse[channelN],number_TS_to_process);
+       //  TSmax[ch2eta[channelN]][ch2depth[channelN]][led_trigger]->Fill(maxtsn);
+      
+       //printf("refchpulse %f\n",refchpulse);
+       float normfactor=meansignalmap[1]->GetBinContent(refchdepth-fibermin+1,refcheta+1);
+       normfactor-= meansignalmap[0]->GetBinContent(refchdepth-fibermin+1,refcheta+1);
+       normfactor=1/refchpulse; //normfactor/refchpulse;
+       //  printf("normfactor %f refpulse %f pedestal %f\n ",normfactor,refchpulse,meansignalmap[0]->GetBinContent(refchdepth-fibermin+1,refcheta+1));
+       maxtsn=maxts(pulse[channelN],number_TS_to_process);
+       for(int TS=0;TS<10;TS++){
+	 if((TS>=maxtsn)&&(TS<maxtsn+number_TS_to_process)) sumTS+=pulse[channelN][TS];
+	 sumall+=pulse[channelN][TS];
+       }
+       // hpulseref[ch2eta[channelN]][ch2depth[channelN]]->Fill(normfactor*(sumTS- meansignalmap[0]->GetBinContent(ch2depth[channelN]-fibermin+1,ch2eta[channelN]+1)));
+       //  if ((sumTS> (meansignalmap[0]->GetBinContent(ch2depth[channelN]-fibermin+1,ch2eta[channelN]+1)))){
+	 hpulseref[ch2eta[channelN]][ch2depth[channelN]]->Fill((sumTS- meansignalmap[0]->GetBinContent(ch2depth[channelN]-fibermin+1,ch2eta[channelN]+1))/refchpulse);
+	 printf(" eta %d depth %d refchpulse %f  sumTS %d pedestal %f subtract %f pedref %f\n",ch2eta[channelN],ch2depth[channelN],refchpulse,sumTS,meansignalmap[0]->GetBinContent(ch2depth[channelN]-fibermin+1,ch2eta[channelN]+1),sumTS- meansignalmap[0]->GetBinContent(ch2depth[channelN]-fibermin+1,ch2eta[channelN]+1),meansignalmap[0]->GetBinContent(refchdepth-fibermin+1,refcheta+1));
+	 //	 }
+     }
+   }
+
+   //reflectionmap fill
+   for(int ietan=0;ietan<6;ietan++){
+     for(int depthn=fibermin;depthn<fibermax+1;depthn++){
+       reflectionentriesmap->SetBinContent(depthn-fibermin+1,ietan+1,(hpulseref[ietan][depthn]->GetEntries()-hpulseref[ietan][depthn]->GetBinContent(0))/hpulse[ietan][depthn][1]->GetEntries());
+       reflectionmap->SetBinContent(depthn-fibermin+1,ietan+1,hpulseref[ietan][depthn]->GetMean());
+				    }
+     }
+   }
+ //end second scan reference
+
+  //Drawing PS histos
+  for (fiber=fibermin;fiber<fibermax+1+2+1;fiber++){
+    sprintf(label,"fiber %d",fiber);
+    if (fiber==fibermax+1) sprintf(label,"spectrVSchannel");
+    if (fiber==fibermax+2) sprintf(label,"mean rms map");
+    if (fiber==fibermax+3) sprintf(label,"reflectionmap");
+    if (gROOT->FindObject(label)) c[fiber-fibermin] = (TCanvas*)gROOT->FindObject(label);
+    else   
+      {c[fiber-fibermin]=new TCanvas (label,label,0,0,400,400);
+	if (fiber<fibermax+1) c[fiber-fibermin]->Divide(3,2);
+	if (fiber==fibermax+1) c[fiber-fibermin]->Divide(1,2);
+	if (fiber==fibermax+2)c[fiber-fibermin]->Divide(2,2);
+      }
+  }
+  for(fiber=fibermin;fiber<fibermax+1;fiber++){
+    for(fiberch=0;fiberch<6;fiberch++){
+      c[fiber-fibermin]->cd(fiberch+1);
+     
+      avgPS[fiberch][fiber][1]->SetLineColor(kRed);
+      avgPS[fiberch][fiber][1]->Draw();
+      avgPS[fiberch][fiber][0]->Draw("same");
+    }
+  }
+  //c[8]->SetLogz();
+  c[fibermax-fibermin+1]->cd(1);
+  c[fibermax-fibermin+1]->GetPad(1)->SetLogz();
+  spectr[1]->Draw("colz");
+  c[fibermax-fibermin+1]->cd(2);
+  c[fibermax-fibermin+1]->GetPad(2)->SetLogz();
+  spectr[0]->Draw("colz");
+  
+  c[fibermax-fibermin+2]->cd(1);
+  meansignalmap[1]->GetXaxis()->CenterLabels();
+  meansignalmap[1]->GetYaxis()->CenterLabels();
+  meansignalmap[1]->SetStats(0);
+  meansignalmap[1]->Draw("colz text");
+  c[fibermax-fibermin+2]->cd(2);
+  meansignalmap[0]->GetXaxis()->CenterLabels();
+  meansignalmap[0]->GetYaxis()->CenterLabels();
+  meansignalmap[0]->SetStats(0);
+  meansignalmap[0]->Draw("colz text");
+  c[fibermax-fibermin+2]->cd(3);
+  rmssignalmap[1]->GetXaxis()->CenterLabels();
+  rmssignalmap[1]->GetYaxis()->CenterLabels();
+  rmssignalmap[1]->SetStats(0);
+  rmssignalmap[1]->Draw("colz text");
+  c[fibermax-fibermin+2]->cd(4);
+  rmssignalmap[0]->GetXaxis()->CenterLabels();
+  rmssignalmap[0]->GetYaxis()->CenterLabels();
+  rmssignalmap[0]->SetStats(0);
+  rmssignalmap[0]->Draw("colz text");
+  c[fibermax-fibermin+3]->Divide(2,1);
+  c[fibermax-fibermin+3]->cd(1);
+  reflectionmap->GetZaxis()->SetRangeUser(0,0.005);
+  reflectionmap->SetStats(0);
+  reflectionmap->Draw("colz text");
+  c[fibermax-fibermin+3]->cd(2);
+  reflectionentriesmap->GetZaxis()->SetRangeUser(0,1);
+  reflectionentriesmap->SetStats(0);
+  reflectionentriesmap->Draw("colz text");
+  fileinput->Close();
+  //outfile
+  /*FILE * out;
+ //char label1[50];
+ sprintf(name,"reflections.txt");
+ out = fopen (name, "a");
+   for(int ietan=0;ietan<6;ietan++){
+     for(int depthn=fibermin;depthn<fibermax+1;depthn++){
+       fprintf(out,"%d\t%d\t%d\t%d\t%f\t%f\n",refchdepth,refcheta,depthn,ietan,reflectionentriesmap->GetBinContent(depthn-fibermin+1,ietan+1),reflectionmap->GetBinContent(depthn-fibermin+1,ietan+1));
+	 }
+     }
+     fclose(out);*/
+   //end outfile
+}
+ 
+int maxts(float TSvalue[10],int number_TS_to_process){
+  // return 2;
+  int max[10]={0,0,0,0,0,0,0,0,0,0};
+  int currentmax=0,currentmin=0,currentmaxcounter=0;
+  for(TSn=0;TSn<10;TSn++){
+    if (max[currentmax]<TSvalue[TSn]){currentmax=TSn;currentmin=TSn;max[currentmax]=TSvalue[currentmax];}
+  }
+  currentmaxcounter++;
+  while (((currentmaxcounter<=number_TS_to_process)&&(currentmin>=0)&&(currentmax<=9))){
+  
+  if ((currentmaxcounter==number_TS_to_process)||(currentmin==0)) return currentmin;
+  if (currentmax==9) return currentmax-number_TS_to_process;
+
+  if (TSvalue[currentmin-1]>TSvalue[currentmax+1]){currentmin--;} else {currentmax++;}
+  currentmaxcounter++;
+ 
+  }
+
+  return 0;
+}

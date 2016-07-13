@@ -1,0 +1,38 @@
+#include "Riostream.h"
+#include <string>
+#include <stdlib.h>
+#include <iostream> 
+#include <cstdio>
+#include <cstdlib>
+void plotreflection(){
+ FILE *in;
+ TH2F *reflectionentriesmap,*reflectionmap;
+ TH1F *reflectionentriesmap1d,*reflectionmap1d;
+ reflectionentriesmap= new TH2F("reflectionentriesmap","reflectionentriesmap",48,0,48,48,0,48);
+ reflectionmap= new TH2F("reflectionmap","reflectionmap",48,0,48,48,0,48);
+ reflectionentriesmap1d= new TH1F("reflectionentriesmap1d","reflectionentriesmap1d",50,0,2);
+ reflectionmap1d= new TH1F("reflectionmap1d","reflectionmap1d",10000,0,1.1);
+int refchdepth[48*48],refcheta[48*48],depth[48*48],eta[48*48];
+float probability[48*48],ratio[48*48];
+char name[50],label1[50];
+ sprintf(name,"reflections.txt");
+ in = fopen (name, "rt");
+ rewind(in);
+// fgets(label1,50,in);
+//fgets(label1,50,in);
+ // printf("%s\n",label1);
+ int etaN,depthN,channelN,led_trigger;
+ for(int i=0;i<48*48;i++){
+   
+     fgets(label1,50,in);    
+     sscanf(label1,"%d\t%d\t%d\t%d\t%f\t%f\n",&refchdepth[i],&refcheta[i],&depth[i],&eta[i],&probability[i],&ratio[i]);
+     printf("%d %d\n",refchdepth[i],refcheta[i]);
+     reflectionentriesmap->SetBinContent((refchdepth[i]-14)*6+refcheta[i]+1,(depth[i]-14)*6+eta[i]+1,probability[i]);
+     reflectionmap->SetBinContent((refchdepth[i]-14)*6+refcheta[i]+1,(depth[i]-14)*6+eta[i]+1,ratio[i]);
+     reflectionentriesmap1d->Fill(probability[i]);
+     if (probability[i]>0.99) reflectionmap1d->Fill(ratio[i]);
+
+ }
+ reflectionmap1d->Draw("");
+ fclose(in);
+}
