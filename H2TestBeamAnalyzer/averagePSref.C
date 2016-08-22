@@ -25,7 +25,7 @@ int ch2eta[Numberofchannels];
 int ch2depth[Numberofchannels];
 TH2F *spectr[2],*meansignalmap[2],*rmssignalmap[2];
 TH2F *reflectionmap,*reflectionentriesmap;
-int number_TS_to_process=2;
+int number_TS_to_process=4;
 int maxts(float TSvalue[10],int number_TS_to_process);
 void averagePSref(int runnumber,int uhtr,int refcheta=2,int refchdepth=5,int whattodraw=0){
   // getting map from file
@@ -33,7 +33,7 @@ void averagePSref(int runnumber,int uhtr,int refcheta=2,int refchdepth=5,int wha
  ///
  FILE * in;
  char label1[50];
- sprintf(name,"tb_chanmap.py");
+ sprintf(name,"tb_chanmap_EMAP-kalinin_HTR%d.py",uhtr);
  in = fopen (name, "rt");
  rewind(in);
  fgets(label1,50,in);
@@ -47,7 +47,7 @@ void averagePSref(int runnumber,int uhtr,int refcheta=2,int refchdepth=5,int wha
      //  printf("%s\n",listn);
      sscanf(label1,"chanmap[%d,8,%d] = %d",&etaN,&depthN,&channelN);
      // channel[etaN][depthN]=channelN;
-     //  printf("channel[%d][%d]=%d\n",etaN,depthN,channelN);
+     // printf("channel[%d][%d]=%d\n",etaN,depthN,channelN);
      ch2eta[channelN-1]=etaN;
      ch2depth[channelN-1]=depthN;
      
@@ -251,6 +251,7 @@ sprintf(label,"reflectionentriesmap");
 
   //Drawing PS histos
   for (fiber=fibermin;fiber<fibermax+1+2+1;fiber++){
+  
     sprintf(label,"fiber %d",fiber);
     if (fiber==fibermax+1) sprintf(label,"spectrVSchannel");
     if (fiber==fibermax+2) sprintf(label,"mean rms map");
@@ -332,6 +333,25 @@ sprintf(label,"reflectionentriesmap");
   reflectionentriesmap->SetStats(0);
   reflectionentriesmap->Draw("colz text");
   fileinput->Close();
+
+  sprintf(name,"ana_averagePS_run%.6d_EMAP-kalinin_HTR%d_phi.root",runnumber,uhtr);
+  //fileout = TFile::Open(name);
+  fileout = new TFile(name,"RECREATE");
+  fileout->cd();
+  printf("fibermin %d fibermax %d\n",fibermin,fibermax);
+  for(int ifiber=fibermin;ifiber<fibermax+1;ifiber++){
+    for(int ifiberch=0;ifiberch<6;ifiberch++){
+      for(int iTS=0;iTS<10;iTS++){
+	printf("%d %d %d\n",ifiber,ifiberch,iTS);
+	
+	hsinglePS[ifiberch][ifiber][iTS][0]->Write();
+
+	hsinglePS[ifiberch][ifiber][iTS][1]->Write();
+      }
+    }
+  }
+  fileout->Close();
+
   //outfile
   /*FILE * out;
  //char label1[50];
@@ -347,7 +367,7 @@ sprintf(label,"reflectionentriesmap");
 }
  
 int maxts(float TSvalue[10],int number_TS_to_process){
-  // return 2;
+  //  return 2;
   int max[10]={0,0,0,0,0,0,0,0,0,0};
   int currentmax=0,currentmin=0,currentmaxcounter=0;
   for(TSn=0;TSn<10;TSn++){

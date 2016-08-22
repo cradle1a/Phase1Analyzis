@@ -121,7 +121,8 @@ if firstStep == 0 and not os.environ.get('CMSSW_BASE'):
     writeout(FATAL,"Please type 'cmsenv' to setup the environment for cmsRun.")
     sys.exit(1)
 
-filePrefixList = ["B904_Integration_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"]
+filePrefixList = ["HTBqc_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"] # NORMAL
+#filePrefixList = ["USC_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"] # for CRF only!
 fileSuffixList = [".root",".root",".root","","",""]
 
 inputFileFormat = [filePrefixList[firstStep],fileSuffixList[firstStep]]
@@ -157,6 +158,9 @@ if not inputLoc:
     if socket.gethostname() != "cmshcal20":
         inputLoc = "daq@cmshcal20.cern.ch:/data/spool"
         if firstStep > 0: inputLoc = "."
+#    if socket.gethostname() != "cmshcaldata01":
+#        inputLoc = "friccita@cmshcaldata01.cern.ch:/data/bigspool/usc"
+#        if firstStep > 0: inputLoc = "."
     writeout(DIAG,"setting inputLoc = %s" % inputLoc)
 writeout(INFO,"Using input location: %s" % inputLoc)    
 
