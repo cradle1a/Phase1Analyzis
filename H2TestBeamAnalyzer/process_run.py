@@ -121,8 +121,8 @@ if firstStep == 0 and not os.environ.get('CMSSW_BASE'):
     writeout(FATAL,"Please type 'cmsenv' to setup the environment for cmsRun.")
     sys.exit(1)
 
-filePrefixList = ["HTBqc_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"] # NORMAL
-#filePrefixList = ["USC_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"] # for CRF only!
+filePrefixList = ["B904_Integration_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"]
+#filePrefixList = ["USC_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"]
 fileSuffixList = [".root",".root",".root","","",""]
 
 inputFileFormat = [filePrefixList[firstStep],fileSuffixList[firstStep]]
@@ -155,12 +155,9 @@ writeout(DIAG,"runs = %s and runList = %s" % (runs,runList))
 inputLoc = op_inputLoc
 if not inputLoc:
     inputLoc = "/data/spool"
-    if socket.gethostname() != "cmshcal20":
-        inputLoc = "daq@cmshcal20.cern.ch:/data/spool"
+    if socket.gethostname() != "localhost":
+        inputLoc = "dtlisov@localhost:/tmp"
         if firstStep > 0: inputLoc = "."
-#    if socket.gethostname() != "cmshcaldata01":
-#        inputLoc = "friccita@cmshcaldata01.cern.ch:/data/bigspool/usc"
-#        if firstStep > 0: inputLoc = "."
     writeout(DIAG,"setting inputLoc = %s" % inputLoc)
 writeout(INFO,"Using input location: %s" % inputLoc)    
 
@@ -206,7 +203,7 @@ if isXrootdDir:
         if fnmatch.fnmatch(filename, filepattern):
             inputFileList.append("%s/%s"%(inputLoc, filename))
 elif inputIsRemote:
-    ls1 = subprocess.Popen(['ssh', inputLoginInfo, inputCommand], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    ls1 = subprocess.Popen(['ssh','-p 2203', inputLoginInfo, inputCommand], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err =  ls1.communicate()
     inputFileList = out.split()
 else:
@@ -263,7 +260,7 @@ if clobber:
 else:
 
     if outputIsRemote:
-        ls2 = subprocess.Popen(['ssh', outputLoginInfo, outputCommand], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ls2 = subprocess.Popen(['ssh', '-p 2203',outputLoginInfo, outputCommand], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err =  ls2.communicate()
     else:
         ls2 = subprocess.Popen(outputCommand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)    

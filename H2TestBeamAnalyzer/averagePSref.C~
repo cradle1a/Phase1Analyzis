@@ -4,7 +4,7 @@
 #include <iostream> 
 #include <cstdio>
 #include <cstdlib>
-const int Numberofchannels=48;
+const int Numberofchannels=120;
 
 TCanvas *c[102];
 int fiber,fiberch;
@@ -27,13 +27,13 @@ TH2F *spectr[2],*meansignalmap[2],*rmssignalmap[2];
 TH2F *reflectionmap,*reflectionentriesmap;
 int number_TS_to_process=2;
 int maxts(float TSvalue[10],int number_TS_to_process);
-void averagePSref(int runnumber,int uhtr,int refcheta=2,int refchdepth=5){
+void averagePSref(int runnumber,int uhtr,int refcheta=2,int refchdepth=5,int whattodraw=0){
   // getting map from file
  ///
  ///
  FILE * in;
  char label1[50];
- sprintf(name,"tb_chanmap.py");
+ sprintf(name,"tb_chanmap_EMAP-kalinin_HTR%d.py",uhtr);
  in = fopen (name, "rt");
  rewind(in);
  fgets(label1,50,in);
@@ -86,21 +86,21 @@ for(int channel=0;channel<Numberofchannels;channel++){
 
      sprintf(label,"pulse eta%d depth%d led=%d",ietan,depthn,led);
      if(gROOT->FindObject(label)) hpulse[ietan][depthn][led] = (TH1F*)gROOT->FindObject(label);
-     else   hpulse[ietan][depthn][led]=new TH1F(label,label,15000,0,15000);
+     else   hpulse[ietan][depthn][led]=new TH1F(label,label,1500000,0,1500000);
      hpulse[ietan][depthn][led]->Reset();
 
      }
    
      sprintf(label,"refpulse eta%d depth%d(rech%d %d)",ietan,depthn,refcheta,refchdepth);
      if(gROOT->FindObject(label)) hpulseref[ietan][depthn] = (TH1F*)gROOT->FindObject(label);
-     else   hpulseref[ietan][depthn]=new TH1F(label,label,100000,0,1500000);
+     else   hpulseref[ietan][depthn]=new TH1F(label,label,1500000,0,1500000);
      hpulseref[ietan][depthn]->Reset();
    }
  }
  for (int led=0;led<2;led++){
    sprintf(label,"spectraVS fiber led=%d",led);
    if(gROOT->FindObject(label))  spectr[led] =  (TH2F*)gROOT->FindObject(label);
-   else  spectr[led] = new TH2F(label,label,10*(fibermax-fibermin+1),fibermin*10,(fibermax+1)*10,10000,0,1500000);
+   else  spectr[led] = new TH2F(label,label,10*(fibermax-fibermin+1),fibermin*10,(fibermax+1)*10,1500000,0,1500000);
    spectr[led]->Reset();
 
    sprintf(label,"mean led=%d",led);
@@ -266,13 +266,35 @@ sprintf(label,"reflectionentriesmap");
   for(fiber=fibermin;fiber<fibermax+1;fiber++){
     for(fiberch=0;fiberch<6;fiberch++){
       c[fiber-fibermin]->cd(fiberch+1);
-     
-      avgPS[fiberch][fiber][1]->SetLineColor(kRed);
-      avgPS[fiberch][fiber][1]->Draw();
-      avgPS[fiberch][fiber][0]->Draw("same");
+      if (whattodraw==0)
+	{
+	  int whattodrawfirst,TSmaxvalue=0,TSmax=0;
+	  for(int TS=0;TS<20;TS++)
+	    {
+	      if  (avgPS[fiberch][fiber][int(TS/10)]->GetBinContent(TS%10)>TSmax) {TSmax=TS;TSmaxvalue=avgPS[fiberch][fiber][int(TS/10)]->GetBinContent(TS%10)>TSmax;}
+	    }
+	  avgPS[fiberch][fiber][1]->SetLineColor(kRed);
+	  avgPS[fiberch][fiber][int(TSmax/10)]->Draw();
+	  avgPS[fiberch][fiber][1-int(TSmax/10)]->Draw("same");
+	}
+      if ((whattodraw==1)||(whattodraw==2))
+	{ hpulse[fiberch][fiber][whattodraw-1]->Rebin(5);
+	  hpulse[fiberch][fiber][whattodraw-1]->GetXaxis()->SetRangeUser(0,hpulse[fiberch][fiber][whattodraw-1]->GetMean()*3);
+	  hpulse[fiberch][fiber][whattodraw-1]->Draw();
+	}
     }
   }
   //c[8]->SetLogz();
+ 
+  int maxrange[2]={0,0};
+  for (int led=0;led<2;led++){
+    for (channelN=0;channelN<Numberofchannels;channelN++){
+      if (maxrange[led]<hpulse[ch2eta[channelN]][ch2depth[channelN]][led]->GetMean()) 
+	maxrange[led]=hpulse[ch2eta[channelN]][ch2depth[channelN]][led]->GetMean();
+    }
+  }
+  spectr[0]->GetYaxis()->SetRangeUser(0,maxrange[0]*4);
+  spectr[1]->GetYaxis()->SetRangeUser(0,maxrange[1]*4);
   c[fibermax-fibermin+1]->cd(1);
   c[fibermax-fibermin+1]->GetPad(1)->SetLogz();
   spectr[1]->Draw("colz");

@@ -52,8 +52,8 @@ process.tbunpack = cms.EDProducer("HcalTBObjectUnpacker",
 #        HcalTriggerFED = cms.untracked.int32(1),
 #        HcalTDCFED = cms.untracked.int32(8),
         HcalTriggerFED = cms.untracked.int32(1),
-                                  HcalTDCFED = cms.untracked.int32(928),#1132
-                                  HcalQADCFED = cms.untracked.int32(928),#928
+                                  HcalTDCFED = cms.untracked.int32(934),#928
+                                  HcalQADCFED = cms.untracked.int32(934),#928
             fedRawDataCollectionTag = cms.InputTag('source')
 )
 
@@ -70,7 +70,7 @@ process.hcalDigis = cms.EDProducer("HcalRawToDigi",
         lastSample = cms.int32(9)
 )
 
-process.hcalDigis.FEDs = cms.untracked.vint32(700,928)
+process.hcalDigis.FEDs = cms.untracked.vint32(700,934)
 
 emapFileShort = emapFile.rsplit('.',1)[0].rsplit('/')[-1]
 

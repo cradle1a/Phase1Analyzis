@@ -156,7 +156,7 @@ private:
     TH1D *x[5];
     TH1D *y[5];
   TH1D *s1, *s2, *s3, *s4;
-  TH1F *channelsVSTS[120];
+  // TH1F *channelsVSTS[120];
 
     edm::EDGetTokenT<HBHEDigiCollection> tok_HBHEDigiCollection_;
     edm::EDGetTokenT<HFDigiCollection> tok_HFDigiCollection_;
@@ -303,7 +303,7 @@ H2TestBeamAnalyzer::H2TestBeamAnalyzer(const edm::ParameterSet& iConfig) :
     y[3] = new TH1D("yD", "yD", 10000, -100, 100);
     y[4] = new TH1D("yE", "yE", 10000, -100, 100);
     char name[100];
-    for(int channelN=0;channelN<120;channelN++){sprintf(name,"channel%d",channelN); channelsVSTS[channelN] = new TH1F(name, name, 10, 0, 9);}
+    //  for(int channelN=0;channelN<120;channelN++){sprintf(name,"channel%d",channelN); channelsVSTS[channelN] = new TH1F(name, name, 10, 0, 9);}
 
     _file->cd("BeamCounters");
     _treeBC = new TTree("Events", "Events");
@@ -333,7 +333,7 @@ H2TestBeamAnalyzer::~H2TestBeamAnalyzer()
     y[2]->Write();
     y[3]->Write();
     y[4]->Write();
-    for(int channelN=0;channelN<120;channelN++){channelsVSTS[channelN]->Write();}
+    //  for(int channelN=0;channelN<120;channelN++){channelsVSTS[channelN]->Write();}
 
     _file->Write();
     _file->Close();
@@ -694,7 +694,7 @@ void H2TestBeamAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
             int tdc = qie11dc[j][i].tdc();
             int capid = qie11dc[j][i].capid();
             int soi = qie11dc[j][i].soi();
-            channelsVSTS[j]->Fill(i,adc2fC[adc]);
+	    //    channelsVSTS[j]->Fill(i,adc2fC[adc]);
             // store pulse information
             const float charge = adc2fC[adc];
             _qie11Info.pulse[j][i] = charge;

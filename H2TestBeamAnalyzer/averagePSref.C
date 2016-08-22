@@ -4,7 +4,45 @@
 #include <iostream> 
 #include <cstdio>
 #include <cstdlib>
-const int Numberofchannels=48;
+const int Numberofchannels=1000;
+int Numberofchannels_emap;
+
+	double const adc2fC[256] = {
+			1.58, 4.73, 7.88, 11.0, 14.2, 17.3, 20.5, 23.6, 
+			26.8, 29.9, 33.1, 36.2, 39.4, 42.5, 45.7, 48.8,
+	  		53.6, 60.1, 66.6, 73.0, 79.5, 86.0, 92.5, 98.9,
+	    		105, 112, 118, 125, 131, 138, 144, 151,
+		 	157, 164, 170, 177, 186, 199, 212, 225,
+		   	238, 251, 264, 277, 289, 302, 315, 328,
+		     	341, 354, 367, 380, 393, 406, 418, 431,
+			444, 464, 490, 516, 542, 568, 594, 620,
+	  		569, 594, 619, 645, 670, 695, 720, 745,
+	    		771, 796, 821, 846, 871, 897, 922, 947,
+		  	960, 1010, 1060, 1120, 1170, 1220, 1270, 1320,
+		    	1370, 1430, 1480, 1530, 1580, 1630, 1690, 1740,
+	  		1790, 1840, 1890, 1940,  2020, 2120, 2230, 2330,
+	    		2430, 2540, 2640, 2740, 2850, 2950, 3050, 3150,
+		  	3260, 3360, 3460, 3570, 3670, 3770, 3880, 3980,
+		    	4080, 4240, 4450, 4650, 4860, 5070, 5280, 5490,
+
+	  		5080, 5280, 5480, 5680, 5880, 6080, 6280, 6480,
+	    		6680, 6890, 7090, 7290, 7490, 7690, 7890, 8090,
+		  	8400, 8810, 9220, 9630, 10000, 10400, 10900, 11300,
+		    	11700, 12100, 12500, 12900, 13300, 13700, 14100, 14500,
+	  		15000, 15400, 15800, 16200, 16800, 17600, 18400, 19300,
+	    		20100, 20900, 21700, 22500, 23400, 24200, 25000, 25800,
+		  	26600, 27500, 28300, 29100, 29900, 30700, 31600, 32400,
+		    	33200, 34400, 36100, 37700, 39400, 41000, 42700, 44300,
+	  		41100, 42700, 44300, 45900, 47600, 49200, 50800, 52500,
+	    		54100, 55700, 57400, 59000, 60600, 62200, 63900, 65500,
+	  		68000, 71300, 74700, 78000, 81400, 84700, 88000, 91400,
+	    		94700, 98100, 101000, 105000, 108000, 111000, 115000, 118000,
+	  		121000, 125000, 128000, 131000, 137000, 145000, 152000, 160000,
+	    		168000, 176000, 183000, 191000, 199000, 206000, 214000, 222000,
+	  		230000, 237000, 245000, 253000, 261000, 268000, 276000, 284000,
+	    		291000, 302000, 316000, 329000, 343000, 356000, 370000, 384000
+		};
+
 
 TCanvas *c[102];
 int fiber,fiberch;
@@ -25,12 +63,20 @@ int ch2eta[Numberofchannels];
 int ch2depth[Numberofchannels];
 TH2F *spectr[2],*meansignalmap[2],*rmssignalmap[2];
 TH2F *reflectionmap,*reflectionentriesmap;
-int number_TS_to_process=4;
+TH1F *gain1d;//= new TH1F("gain1d","gain1d",100,0,100);
+TH2F *gain2d;//
+int number_TS_to_process=2;
 int maxts(float TSvalue[10],int number_TS_to_process);
 void averagePSref(int runnumber,int uhtr,int refcheta=2,int refchdepth=5,int whattodraw=0){
   // getting map from file
  ///
  ///
+double  low_edge[256];
+low_edge[0]=0;
+ for(int i=1;i<256;i++){
+   low_edge[i]=(adc2fC[i]-adc2fC[i-1])/2+adc2fC[i-1];printf("%d %2f\t %2f\n",i,low_edge[i],adc2fC[i]);
+   if (low_edge[i]<low_edge[i-1]){low_edge[i]=low_edge[i-1];printf("!!!%2f\n",low_edge[i]);}
+ }//printf("\n");return;
  FILE * in;
  char label1[50];
  sprintf(name,"tb_chanmap_EMAP-kalinin_HTR%d.py",uhtr);
@@ -42,12 +88,13 @@ void averagePSref(int runnumber,int uhtr,int refcheta=2,int refchdepth=5,int wha
  int etaN,depthN,channelN,led_trigger;
  for(int channel=0;channel<Numberofchannels;channel++){
    
-     fgets(label1,50,in);
-     //printf("%s\n",label1);
+   fgets(label1,50,in);
+   if (label1[0]=='\n') {printf("channels %d\n",channel);Numberofchannels_emap=channel;break;}// else {printf("exist%d\n",channel);}
+   //  printf("%s\n",label1);
      //  printf("%s\n",listn);
      sscanf(label1,"chanmap[%d,8,%d] = %d",&etaN,&depthN,&channelN);
      // channel[etaN][depthN]=channelN;
-     // printf("channel[%d][%d]=%d\n",etaN,depthN,channelN);
+     //  printf("channel[%d][%d]=%d\n",etaN,depthN,channelN);
      ch2eta[channelN-1]=etaN;
      ch2depth[channelN-1]=depthN;
      
@@ -55,7 +102,7 @@ void averagePSref(int runnumber,int uhtr,int refcheta=2,int refchdepth=5,int wha
  }
  fclose(in);
  //getting fibermin fibermax
-for(int channel=0;channel<Numberofchannels;channel++){
+for(int channel=0;channel<Numberofchannels_emap;channel++){
   if (ch2depth[channel]>fibermax) fibermax = ch2depth[channel];
   if (ch2depth[channel]<fibermin) fibermin = ch2depth[channel];
  }
@@ -68,7 +115,8 @@ for(int channel=0;channel<Numberofchannels;channel++){
 	 
 	 sprintf(label,"charge eta%d depth%d TS%d led=%d",ietan,depthn,TSnn,led);
 	 if(gROOT->FindObject(label))  hsinglePS[ietan][depthn][TSnn][led]=(TH1F*)gROOT->FindObject(label);
-	 else	 hsinglePS[ietan][depthn][TSnn][led]= new TH1F(label,label,100000,0,1000000);
+	 //	 else	 hsinglePS[ietan][depthn][TSnn][led]= new TH1F(label,label,1000000,0,1000000);
+	 else	 hsinglePS[ietan][depthn][TSnn][led]= new TH1F(label,label,255,low_edge);
 	 hsinglePS[ietan][depthn][TSnn][led]->Reset();
 	
        }
@@ -123,6 +171,17 @@ sprintf(label,"reflectionentriesmap");
    if(gROOT->FindObject(label)) reflectionentriesmap = (TH2F*)gROOT->FindObject(label);
    else  reflectionentriesmap = new TH2F(label,label,fibermax-fibermin+1,fibermin,fibermax+1,6,0,6);
    reflectionentriesmap->Reset();
+
+sprintf(label,"gain1d");
+   if(gROOT->FindObject(label)) gain1d = (TH1F*)gROOT->FindObject(label);
+   else  gain1d = new TH1F(label,label,100,0,100);
+   gain1d->Reset();
+
+sprintf(label,"gain2d");
+   if(gROOT->FindObject(label)) gain2d = (TH2F*)gROOT->FindObject(label);
+   else  gain2d = new TH2F(label,label,fibermax-fibermin+1,fibermin,fibermax+1,6,0,6);
+   gain2d->Reset();
+
  sprintf(name,"ana_h2_tb_run%.6d_EMAP-kalinin_HTR%d.root",runnumber,uhtr);
  fileinput = TFile::Open(name);
  
@@ -149,7 +208,7 @@ sprintf(label,"reflectionentriesmap");
    Events->GetEntry(i);
  
     
-   for (channelN=0;channelN<Numberofchannels;channelN++){
+   for (channelN=0;channelN<Numberofchannels_emap;channelN++){
      sumTS=0;
      sumall=0;
 
@@ -201,7 +260,7 @@ sprintf(label,"reflectionentriesmap");
      Events->GetEntry(i);if (!led_trigger) continue;
      //getting refchvalues
      float refchpulse=0;
-     for (channelN=0;channelN<Numberofchannels;channelN++){
+     for (channelN=0;channelN<Numberofchannels_emap;channelN++){
        //  printf("channelN %d ch2depth %d ch2eta %d\n",channelN,ch2depth[channelN],ch2eta[channelN]);
        if ((ch2depth[channelN]==refchdepth)&&(ch2eta[channelN]==refcheta)){
 	 // printf("channelref %d\n",channelN);
@@ -214,7 +273,7 @@ sprintf(label,"reflectionentriesmap");
        printf("refchpulse %f\n",refchpulse);
        refchpulse-=meansignalmap[0]->GetBinContent(refchdepth-fibermin+1,refcheta+1);
      //end getting refchvalues
-     for (channelN=0;channelN<Numberofchannels;channelN++){
+     for (channelN=0;channelN<Numberofchannels_emap;channelN++){
        sumTS=0;
        sumall=0;
        
@@ -251,7 +310,6 @@ sprintf(label,"reflectionentriesmap");
 
   //Drawing PS histos
   for (fiber=fibermin;fiber<fibermax+1+2+1;fiber++){
-  
     sprintf(label,"fiber %d",fiber);
     if (fiber==fibermax+1) sprintf(label,"spectrVSchannel");
     if (fiber==fibermax+2) sprintf(label,"mean rms map");
@@ -267,6 +325,7 @@ sprintf(label,"reflectionentriesmap");
   for(fiber=fibermin;fiber<fibermax+1;fiber++){
     for(fiberch=0;fiberch<6;fiberch++){
       c[fiber-fibermin]->cd(fiberch+1);
+      //   c[fiber-fibermin]->GetPad(fiberch+1)->SetLogy();
       if (whattodraw==0)
 	{
 	  int whattodrawfirst,TSmaxvalue=0,TSmax=0;
@@ -279,9 +338,43 @@ sprintf(label,"reflectionentriesmap");
 	  avgPS[fiberch][fiber][1-int(TSmax/10)]->Draw("same");
 	}
       if ((whattodraw==1)||(whattodraw==2))
-	{
+	{  
+	  c[fiber-fibermin]->GetPad(fiberch+1)->SetLogy();
+	  Double_t par[9];
+	  hpulse[fiberch][fiber][whattodraw-1]->Rebin(4);
+	  int binmax=   hpulse[fiberch][fiber][whattodraw-1]->GetMaximumBin();
+	  int maximumvalue=  hpulse[fiberch][fiber][whattodraw-1]->GetBinCenter(binmax);
+	  TF1 *g1    = new TF1("g1","gaus",maximumvalue-20,maximumvalue+20);
+	  hpulse[fiberch][fiber][whattodraw-1]->Fit(g1,"R");
+	  g1->GetParameters(&par[0]);
+	  hpulse[fiberch][fiber][whattodraw-1]->GetXaxis()->SetRangeUser(maximumvalue+20,maximumvalue+100);
+	  binmax=   hpulse[fiberch][fiber][whattodraw-1]->GetMaximumBin();
+	  maximumvalue=  hpulse[fiberch][fiber][whattodraw-1]->GetBinCenter(binmax);
+	  TF1  *g2    = new TF1("g2","gaus",maximumvalue-15,maximumvalue+30);
+	  hpulse[fiberch][fiber][whattodraw-1]->Fit(g2,"R+");
+	  g2->GetParameters(&par[3]);
+	  hpulse[fiberch][fiber][whattodraw-1]->GetXaxis()->SetRangeUser(maximumvalue+20,maximumvalue+100);
+	  binmax=   hpulse[fiberch][fiber][whattodraw-1]->GetMaximumBin();
+	  maximumvalue=  hpulse[fiberch][fiber][whattodraw-1]->GetBinCenter(binmax);
+	  TF1  *g3    = new TF1("g3","gaus",maximumvalue-15,maximumvalue+30);
+	  hpulse[fiberch][fiber][whattodraw-1]->Fit(g3,"R+");
+	  g3->GetParameters(&par[6]);
+	  // TF1 *total = new TF1("total","g1(0)+g2(3)",0,maximumvalue+20);
+	  // total->SetParameters(par);
+	  //hpulse[fiberch][fiber][whattodraw-1]->Fit(g1,"R");
+	  // hpulse[fiberch][fiber][whattodraw-1]->Fit(g2,"R+");
+	  // hpulse[fiberch][fiber][whattodraw-1]->Fit(total,"R+");
 	  hpulse[fiberch][fiber][whattodraw-1]->GetXaxis()->SetRangeUser(0,hpulse[fiberch][fiber][whattodraw-1]->GetMean()*3);
 	  hpulse[fiberch][fiber][whattodraw-1]->Draw();
+
+	  //begin gain calculation
+	 
+	  gain1d->Fill(par[4]-par[1]);
+
+	  gain2d->SetBinContent(fiber-fibermin+1,fiberch+1,(par[4]-par[1])/(par[7]-par[4]));
+	  gain2d->GetZaxis()->SetRangeUser(0.9,1.1);
+	  // end gain calculation
+
 	}
     }
   }
@@ -289,7 +382,7 @@ sprintf(label,"reflectionentriesmap");
  
   int maxrange[2]={0,0};
   for (int led=0;led<2;led++){
-    for (channelN=0;channelN<Numberofchannels;channelN++){
+    for (channelN=0;channelN<Numberofchannels_emap;channelN++){
       if (maxrange[led]<hpulse[ch2eta[channelN]][ch2depth[channelN]][led]->GetMean()) 
 	maxrange[led]=hpulse[ch2eta[channelN]][ch2depth[channelN]][led]->GetMean();
     }
@@ -333,25 +426,6 @@ sprintf(label,"reflectionentriesmap");
   reflectionentriesmap->SetStats(0);
   reflectionentriesmap->Draw("colz text");
   fileinput->Close();
-
-  sprintf(name,"ana_averagePS_run%.6d_EMAP-kalinin_HTR%d_phi.root",runnumber,uhtr);
-  //fileout = TFile::Open(name);
-  fileout = new TFile(name,"RECREATE");
-  fileout->cd();
-  printf("fibermin %d fibermax %d\n",fibermin,fibermax);
-  for(int ifiber=fibermin;ifiber<fibermax+1;ifiber++){
-    for(int ifiberch=0;ifiberch<6;ifiberch++){
-      for(int iTS=0;iTS<10;iTS++){
-	printf("%d %d %d\n",ifiber,ifiberch,iTS);
-	
-	hsinglePS[ifiberch][ifiber][iTS][0]->Write();
-
-	hsinglePS[ifiberch][ifiber][iTS][1]->Write();
-      }
-    }
-  }
-  fileout->Close();
-
   //outfile
   /*FILE * out;
  //char label1[50];
@@ -367,7 +441,7 @@ sprintf(label,"reflectionentriesmap");
 }
  
 int maxts(float TSvalue[10],int number_TS_to_process){
-  //  return 2;
+  // return 2;
   int max[10]={0,0,0,0,0,0,0,0,0,0};
   int currentmax=0,currentmin=0,currentmaxcounter=0;
   for(TSn=0;TSn<10;TSn++){

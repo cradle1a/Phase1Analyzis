@@ -121,7 +121,8 @@ if firstStep == 0 and not os.environ.get('CMSSW_BASE'):
     writeout(FATAL,"Please type 'cmsenv' to setup the environment for cmsRun.")
     sys.exit(1)
 
-filePrefixList = ["HTBqc_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"]
+filePrefixList = ["B904_Integration_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"]
+#filePrefixList = ["USC_","ana_h2_tb_run","ana_tb_out_run","tb_plots_run","tb_plots_run","tb_plots_run"]
 fileSuffixList = [".root",".root",".root","","",""]
 
 inputFileFormat = [filePrefixList[firstStep],fileSuffixList[firstStep]]
